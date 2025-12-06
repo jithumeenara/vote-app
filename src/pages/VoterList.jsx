@@ -87,7 +87,7 @@ export default function VoterList() {
     if (loading) return <LoadingSpinner text="വോട്ടർ പട്ടിക ലോഡുചെയ്യുന്നു..." />;
 
     return (
-        <div style={{ paddingBottom: '80px', fontFamily: "'Anek Malayalam', sans-serif" }}>
+        <div style={{ paddingBottom: '80px', fontFamily: "'Anek Malayalam', sans-serif", color: 'var(--text)' }}>
 
             {/* Booth Info Section - Moved Above Search */}
             <div style={{ padding: '0 0 1.5rem 0', textAlign: 'center' }}>
@@ -96,14 +96,14 @@ export default function VoterList() {
                     alignItems: 'center',
                     gap: '0.5rem',
                     padding: '0.35rem 1rem',
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
-                    color: '#64748b',
+                    background: 'var(--surface)',
+                    border: '1px solid rgba(55, 17, 32, 0.1)',
+                    color: 'var(--text-light)',
                     borderRadius: '30px',
                     fontSize: '0.9rem',
                     fontWeight: '500',
                     marginBottom: '1rem',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    boxShadow: '0 2px 4px rgba(55, 17, 32, 0.05)'
                 }}>
                     <MapPin size={14} />
                     {boothDetails?.wards?.panchayats?.name} • വാർഡ് {boothDetails?.wards?.ward_no}
@@ -113,7 +113,7 @@ export default function VoterList() {
                     fontSize: '1.85rem',
                     lineHeight: '1.2',
                     marginBottom: '1.25rem',
-                    color: '#1e293b',
+                    color: 'var(--text)',
                     fontWeight: '800',
                     letterSpacing: '-0.02em',
                     padding: '0 1rem'
@@ -123,19 +123,19 @@ export default function VoterList() {
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <div style={{
-                        background: '#fff',
+                        background: 'var(--surface)',
                         padding: '0.6rem 1.25rem',
                         borderRadius: '16px',
                         fontWeight: '600',
-                        color: '#475569',
+                        color: 'var(--text-light)',
                         fontSize: '1rem',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
-                        border: '1px solid #e2e8f0',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                        border: '1px solid rgba(55, 17, 32, 0.1)',
+                        boxShadow: '0 2px 4px rgba(55, 17, 32, 0.05)'
                     }}>
-                        <User size={18} className="text-primary" />
+                        <User size={18} style={{ color: 'var(--primary)' }} />
                         {voters.length} വോട്ടർമാർ
                     </div>
 
@@ -169,16 +169,16 @@ export default function VoterList() {
                 position: 'sticky',
                 top: '0',
                 zIndex: 100,
-                background: 'rgba(255, 255, 255, 0.95)',
+                background: 'rgba(253, 242, 244, 0.95)',
                 backdropFilter: 'blur(10px)',
                 padding: '1rem',
                 margin: '0 -1rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                boxShadow: '0 4px 20px rgba(55, 17, 32, 0.05)',
                 marginBottom: '1rem'
             }}>
                 <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', gap: '0.75rem' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
-                        <Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
                         <input
                             type="text"
                             placeholder="തിരയുക (പേര്, വീട്ടുപേര്, നമ്പർ...)"
@@ -188,22 +188,20 @@ export default function VoterList() {
                                 width: '100%',
                                 padding: '0.85rem 1rem 0.85rem 3.2rem',
                                 borderRadius: '16px',
-                                border: '1px solid #e2e8f0',
-                                background: '#f8fafc',
+                                border: '1px solid rgba(55, 17, 32, 0.1)',
+                                background: 'var(--surface)',
                                 fontSize: '1.05rem',
                                 outline: 'none',
-                                color: '#1e293b',
+                                color: 'var(--text)',
                                 transition: 'all 0.2s ease',
                                 fontFamily: 'inherit'
                             }}
                             onFocus={(e) => {
-                                e.target.style.background = '#fff';
-                                e.target.style.borderColor = '#350617';
-                                e.target.style.boxShadow = '0 0 0 4px rgba(53, 6, 23, 0.1)';
+                                e.target.style.borderColor = 'var(--primary)';
+                                e.target.style.boxShadow = '0 0 0 4px rgba(207, 46, 77, 0.1)';
                             }}
                             onBlur={(e) => {
-                                e.target.style.background = '#f8fafc';
-                                e.target.style.borderColor = '#e2e8f0';
+                                e.target.style.borderColor = 'rgba(55, 17, 32, 0.1)';
                                 e.target.style.boxShadow = 'none';
                             }}
                         />
@@ -216,19 +214,19 @@ export default function VoterList() {
                 <div style={{
                     textAlign: 'center',
                     padding: '4rem 1rem',
-                    color: '#94a3b8',
+                    color: 'var(--text-light)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: '1.5rem'
                 }}>
                     <div style={{
-                        background: '#f1f5f9',
+                        background: 'var(--surface)',
                         padding: '2rem',
                         borderRadius: '50%',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                        boxShadow: 'inset 0 2px 4px rgba(55, 17, 32, 0.05)'
                     }}>
-                        <Search size={40} color="#cbd5e1" />
+                        <Search size={40} style={{ color: 'var(--text-light)', opacity: 0.5 }} />
                     </div>
                     <div>
                         {searchTerm ? (
@@ -243,28 +241,29 @@ export default function VoterList() {
                     {filteredVoters.map((voter, index) => {
                         const isShifted = voter.status === 'shifted';
                         const isDeleted = voter.status === 'deleted';
+                        const isEven = index % 2 === 0;
 
                         return (
                             <div key={voter.id} style={{
                                 borderRadius: '16px',
                                 overflow: 'hidden',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-                                border: '1px solid #e2e8f0',
-                                background: 'white',
+                                boxShadow: '0 4px 6px -1px rgba(55, 17, 32, 0.05), 0 2px 4px -1px rgba(55, 17, 32, 0.03)',
+                                border: '1px solid rgba(55, 17, 32, 0.08)',
+                                background: 'var(--surface)',
                                 animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
                                 display: 'flex',
                                 flexDirection: 'column'
                             }}>
-                                {/* Header - Light Color (#f8fafc) */}
+                                {/* Header - Alternating Theme Background */}
                                 <div style={{
-                                    background: '#f8fafc',
+                                    background: isEven ? 'var(--background)' : 'white',
                                     padding: '1rem 1.25rem',
-                                    borderBottom: '1px solid #e2e8f0',
+                                    borderBottom: '1px solid rgba(55, 17, 32, 0.08)',
                                     position: 'relative'
                                 }}>
                                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                                         <div style={{
-                                            background: '#350617',
+                                            background: 'var(--primary-bg)',
                                             minWidth: '42px',
                                             height: '42px',
                                             borderRadius: '10px',
@@ -274,8 +273,8 @@ export default function VoterList() {
                                             fontWeight: '700',
                                             fontSize: '1.1rem',
                                             color: '#facc15',
-                                            border: '1px solid #350617',
-                                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                            border: '1px solid var(--primary-bg)',
+                                            boxShadow: '0 1px 2px rgba(55, 17, 32, 0.1)'
                                         }}>
                                             {voter.sl_no}
                                         </div>
@@ -285,12 +284,12 @@ export default function VoterList() {
                                                 fontSize: '1.25rem',
                                                 fontWeight: '800',
                                                 lineHeight: '1.3',
-                                                color: '#1e293b'
+                                                color: 'var(--text)'
                                             }}>
                                                 {voter.name}
                                             </h3>
                                             {voter.guardian_name && (
-                                                <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '500' }}>
+                                                <div style={{ fontSize: '0.9rem', color: 'var(--text-light)', fontWeight: '500' }}>
                                                     രക്ഷിതാവ്: {voter.guardian_name}
                                                 </div>
                                             )}
@@ -321,20 +320,20 @@ export default function VoterList() {
                                         gap: '1rem 1.5rem',
                                     }}>
                                         <div>
-                                            <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>വീട്ടുപേര്</div>
-                                            <div style={{ fontWeight: 600, color: '#334155', fontSize: '1.05rem' }}>{voter.house_name || '-'}</div>
+                                            <div style={{ color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>വീട്ടുപേര്</div>
+                                            <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '1.05rem' }}>{voter.house_name || '-'}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>വീട്ടുനമ്പർ</div>
-                                            <div style={{ fontWeight: 600, color: '#334155', fontSize: '1.05rem' }}>{voter.house_no || '-'}</div>
+                                            <div style={{ color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>വീട്ടുനമ്പർ</div>
+                                            <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '1.05rem' }}>{voter.house_no || '-'}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>വിവരങ്ങൾ</div>
-                                            <div style={{ fontWeight: 600, color: '#334155', fontSize: '1.05rem' }}>{voter.age} വയസ്സ്, {voter.gender}</div>
+                                            <div style={{ color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>വിവരങ്ങൾ</div>
+                                            <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '1.05rem' }}>{voter.age} വയസ്സ്, {voter.gender}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>ഐഡി കാർഡ്</div>
-                                            <div style={{ fontWeight: 700, color: '#350617', fontSize: '1.05rem', letterSpacing: '0.5px' }}>{voter.id_card_no}</div>
+                                            <div style={{ color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.2rem' }}>ഐഡി കാർഡ്</div>
+                                            <div style={{ fontWeight: 700, color: 'var(--primary-bg)', fontSize: '1.05rem', letterSpacing: '0.5px' }}>{voter.id_card_no}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -361,7 +360,7 @@ export default function VoterList() {
                         }
                     }
                     .text-primary {
-                        color: #350617;
+                        color: var(--primary-bg);
                     }
                 `}
             </style>

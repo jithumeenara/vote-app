@@ -4,7 +4,9 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { Printer, Search, Filter, LayoutTemplate, Bot, Share } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { transliterateToMalayalam } from '../../lib/ai';
+import { transliterateMalayalamToEnglish } from '../../utils/transliteration';
 import html2canvas from 'html2canvas';
+import Fuse from 'fuse.js';
 
 // Memoized Voter Slip Component for performance
 const VoterSlipItem = React.memo(({ voter, isSelected, onToggle, candidatePhoto, symbolPreview, template = 'classic' }) => {
@@ -225,6 +227,10 @@ export default function GenerateSlips() {
     const [isAiEnabled, setIsAiEnabled] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
 
+    // Optimization for Ward Members: Load all voters for fast search
+    const [wardVoters, setWardVoters] = useState([]);
+    const [fuseInstance, setFuseInstance] = useState(null);
+
     // Fetch Panchayats
     useEffect(() => {
         fetchPanchayats();
@@ -413,7 +419,7 @@ export default function GenerateSlips() {
         }
     }, [selectedCandidate, candidates]);
 
-    // Ward Member Pre-selection
+    // Ward Member Pre-selection & Data Fetching
     useEffect(() => {
         if (isWardMember && user?.ward_id) {
             const fetchWardDetails = async () => {
@@ -424,56 +430,132 @@ export default function GenerateSlips() {
                 }
             };
             fetchWardDetails();
+
+            // Fetch all voters for this ward for instant search
+            const fetchAllWardVoters = async () => {
+                const { data: boothsData } = await supabase.from('booths').select('id').eq('ward_id', user.ward_id);
+                if (boothsData) {
+                    const boothIds = boothsData.map(b => b.id);
+                    if (boothIds.length > 0) {
+                        const { data: votersData } = await supabase
+                            .from('voters')
+                            .select(`
+                                *,
+                                booths (
+                                    name,
+                                    booth_no,
+                                    wards (
+                                        ward_no,
+                                        name,
+                                        id
+                                    )
+                                )
+                            `)
+                            .in('booth_id', boothIds);
+
+                        if (votersData) {
+                            // Pre-process data for search: Add Manglish fields
+                            const processedVoters = votersData.map(v => {
+                                const safeName = v.name || '';
+                                const safeHouse = v.house_name || '';
+                                const safeGuardian = v.guardian_name || '';
+                                return {
+                                    ...v,
+                                    manglishName: transliterateMalayalamToEnglish(safeName).toLowerCase(),
+                                    manglishHouse: transliterateMalayalamToEnglish(safeHouse).toLowerCase(),
+                                    manglishGuardian: transliterateMalayalamToEnglish(safeGuardian).toLowerCase(),
+                                    sl_no_str: (v.sl_no || '').toString()
+                                };
+                            });
+                            setWardVoters(processedVoters);
+                        }
+                    }
+                }
+            };
+            fetchAllWardVoters();
         }
     }, [isWardMember, user]);
 
-    // Individual Search
+    // Initialize Fuse with Advanced Configuration (Matching VoterList.jsx)
+    useEffect(() => {
+        if (wardVoters.length > 0) {
+            const fuse = new Fuse(wardVoters, {
+                keys: [
+                    { name: 'name', weight: 2 },            // Malayalam Name
+                    { name: 'manglishName', weight: 1.5 },  // English/Manglish Name
+                    { name: 'sl_no_str', weight: 2 },       // Serial No
+                    { name: 'id_card_no', weight: 1.5 },    // ID Card
+                    { name: 'house_name', weight: 1 },      // House Name
+                    { name: 'manglishHouse', weight: 1 },
+                    { name: 'guardian_name', weight: 0.8 },
+                    { name: 'manglishGuardian', weight: 0.8 },
+                    { name: 'house_no', weight: 0.8 }
+                ],
+                threshold: 0.25, // Stricter threshold for accuracy
+                distance: 100,
+                minMatchCharLength: 2,
+                includeScore: true,
+                ignoreLocation: true
+            });
+            setFuseInstance(fuse);
+        }
+    }, [wardVoters]);
+
+    // Individual Search (Optimized)
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
-            if (activeTab === 'individual' && individualSearchTerm.length > 2) {
-                setLoading(true);
-                try {
-                    let query = supabase
-                        .from('voters')
-                        .select(`
-                            *,
-                            booths (
-                                name,
-                                booth_no,
-                                wards (
-                                    ward_no,
+            if (activeTab === 'individual' && individualSearchTerm.length > 1) {
+                // If Fuse is ready (Ward Member), use it
+                if (fuseInstance) {
+                    const results = fuseInstance.search(individualSearchTerm);
+                    setIndividualSearchResults(results.map(r => r.item).slice(0, 20));
+                }
+                // Fallback to DB Search (Admin or loading)
+                else {
+                    setLoading(true);
+                    try {
+                        let query = supabase
+                            .from('voters')
+                            .select(`
+                                *,
+                                booths (
                                     name,
-                                    id
+                                    booth_no,
+                                    wards (
+                                        ward_no,
+                                        name,
+                                        id
+                                    )
                                 )
-                            )
-                        `)
-                        .ilike('name', `%${individualSearchTerm}%`)
-                        .limit(20);
+                            `)
+                            .ilike('name', `%${individualSearchTerm}%`)
+                            .limit(20);
 
-                    const { data, error } = await query;
+                        const { data, error } = await query;
 
-                    if (error) throw error;
+                        if (error) throw error;
 
-                    let results = data || [];
+                        let results = data || [];
 
-                    // Filter for Ward Member
-                    if (isWardMember && user?.ward_id) {
-                        results = results.filter(v => v.booths?.wards?.id === user.ward_id);
+                        // Filter for Ward Member (safety check if fuse failed)
+                        if (isWardMember && user?.ward_id) {
+                            results = results.filter(v => v.booths?.wards?.id === user.ward_id);
+                        }
+
+                        setIndividualSearchResults(results);
+                    } catch (error) {
+                        console.error("Individual Search Error", error);
+                    } finally {
+                        setLoading(false);
                     }
-
-                    setIndividualSearchResults(results);
-                } catch (error) {
-                    console.error("Individual Search Error", error);
-                } finally {
-                    setLoading(false);
                 }
             } else {
                 setIndividualSearchResults([]);
             }
-        }, 500);
+        }, fuseInstance ? 100 : 500); // Faster debounce for local search
 
         return () => clearTimeout(delayDebounceFn);
-    }, [individualSearchTerm, activeTab, isWardMember, user]);
+    }, [individualSearchTerm, activeTab, isWardMember, user, fuseInstance]);
 
     const addToIndividualList = (voter) => {
         if (!individualSelectedVoters.find(v => v.id === voter.id)) {
@@ -686,7 +768,7 @@ export default function GenerateSlips() {
 
                         <div className="form-group" style={{ position: 'relative' }}>
                             <label className="label">വോട്ടറെ തിരയുക (പേര്)</label>
-                            <div className="search-box">
+                            <div className="search-box" style={{ position: 'relative' }}>
                                 <Search size={20} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }} />
                                 <input
                                     type="text"
@@ -696,51 +778,117 @@ export default function GenerateSlips() {
                                     onChange={(e) => setIndividualSearchTerm(e.target.value)}
                                     style={{ paddingLeft: '40px' }}
                                 />
-                                {loading && <div style={{ position: 'absolute', right: '10px', top: '12px' }}><LoadingSpinner size="small" /></div>}
+                                {loading && <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)' }}><LoadingSpinner size="small" /></div>}
                             </div>
 
-                            {individualSearchResults.length > 0 && (
+                            {(individualSearchResults.length > 0 || (individualSearchTerm.length > 1 && !loading && individualSearchResults.length === 0)) && (
                                 <div className="search-results-dropdown" style={{
                                     position: 'absolute',
                                     top: '100%',
                                     left: 0,
                                     right: 0,
                                     background: 'white',
-                                    border: '1px solid #ddd',
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                    zIndex: 1000,
-                                    maxHeight: '300px',
-                                    overflowY: 'auto'
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                    zIndex: 2000,
+                                    maxHeight: '350px',
+                                    overflowY: 'auto',
+                                    marginTop: '8px'
                                 }}>
-                                    {individualSearchResults.map(voter => (
-                                        <div
-                                            key={voter.id}
-                                            onClick={() => addToIndividualList(voter)}
-                                            style={{ padding: '10px', borderBottom: '1px solid #eee', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                                            className="search-result-item"
-                                        >
-                                            <div>
-                                                <div style={{ fontWeight: 'bold' }}>{voter.name}</div>
-                                                <div style={{ fontSize: '0.8rem', color: '#666' }}>House: {voter.house_name} | ID: {voter.id_card_no}</div>
-                                            </div>
-                                            <div style={{ fontSize: '0.8rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px' }}>
-                                                Booth: {voter.booths?.booth_no}
-                                            </div>
+                                    {individualSearchResults.length === 0 ? (
+                                        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>
+                                            ഫലങ്ങളൊന്നുമില്ല (No results found)
                                         </div>
-                                    ))}
+                                    ) : (
+                                        individualSearchResults.map(voter => (
+                                            <div
+                                                key={voter.id}
+                                                onClick={() => addToIndividualList(voter)}
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    borderBottom: '1px solid #f1f5f9',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                className="search-result-item"
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                                <div>
+                                                    <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '1rem', marginBottom: '4px' }}>{voter.name}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span>{voter.house_name}</span>
+                                                        <span style={{ fontSize: '0.6rem', color: '#cbd5e1' }}>●</span>
+                                                        <span style={{ fontWeight: '500', color: '#475569' }}>{voter.id_card_no}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                                    <div style={{ fontSize: '0.7rem', background: '#eff6ff', color: '#3b82f6', padding: '2px 8px', borderRadius: '12px', fontWeight: '600', border: '1px solid #dbeafe' }}>
+                                                        Booth {voter.booths?.booth_no}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#cf2e4d', fontFamily: 'monospace' }}>
+                                                        #{voter.sl_no}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             )}
                         </div>
 
                         {individualSelectedVoters.length > 0 && (
                             <div style={{ marginTop: '2rem' }}>
-                                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>തിരഞ്ഞെടുത്ത വോട്ടർമാർ ({individualSelectedVoters.length})</h3>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span>തിരഞ്ഞെടുത്ത വോട്ടർമാർ</span>
+                                    <span style={{ background: '#cf2e4d', color: 'white', padding: '2px 10px', borderRadius: '12px', fontSize: '0.9rem' }}>{individualSelectedVoters.length}</span>
+                                </h3>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                                    gap: '1rem'
+                                }}>
                                     {individualSelectedVoters.map(voter => (
-                                        <div key={voter.id} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '5px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span>{voter.name}</span>
-                                            <button onClick={() => removeFromIndividualList(voter.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }}>×</button>
+                                        <div key={voter.id} style={{
+                                            background: '#fff',
+                                            border: '1px solid #e2e8f0',
+                                            padding: '1rem',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'flex-start',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                                            position: 'relative',
+                                            overflow: 'hidden'
+                                        }}>
+                                            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#cf2e4d' }}></div>
+                                            <div>
+                                                <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#1e293b' }}>{voter.name}</h4>
+                                                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>{voter.house_name}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>ID: {voter.id_card_no}</div>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                                                <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#cf2e4d' }}>{voter.sl_no}</div>
+                                                <button
+                                                    onClick={() => removeFromIndividualList(voter.id)}
+                                                    style={{
+                                                        border: 'none',
+                                                        background: '#fee2e2',
+                                                        color: '#ef4444',
+                                                        padding: '4px 8px',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '600'
+                                                    }}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
