@@ -25,3 +25,21 @@ dist-ssr
 .env
 .env.local
 .env.*
+
+# OS generated files
+.thumbs.db
+Thumbs.db
+
+# Zip files (Deployment artifacts)
+*.zip
+vote_app_deploy_optimized.zip
+vote_app_netlify_dist.zip
+vote_app_source_clean.zip
+
+# Python scripts
+create_zip.py
+__pycache__/
+
+# Docker (Optional: Keep if you want to track them, uncomment to ignore)
+# Dockerfile
+# docker-compose.yml

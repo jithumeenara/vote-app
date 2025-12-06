@@ -168,21 +168,21 @@ export default function AdminDashboard() {
                     <FileText size={48} style={{ marginBottom: '0.5rem' }} />
                     <h3 style={{ margin: 0 }}>റിപ്പോർട്ടുകൾ</h3>
                 </Link>
+                <Link to="/admin/voter-status-reports" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#64748b', color: 'white' }}>
+                    <FileText size={48} style={{ marginBottom: '0.5rem' }} />
+                    <h3 style={{ margin: 0 }}>Status Reports</h3>
+                </Link>
                 <Link to="/admin/generate-slips" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#8b5cf6', color: 'white' }}>
                     <Printer size={48} style={{ marginBottom: '0.5rem' }} />
                     <h3 style={{ margin: 0 }}>സ്ലിപ്പുകൾ</h3>
-                </Link>
-                <Link to="/admin/mark-votes" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#10b981', color: 'white' }}>
-                    <CheckCircle size={48} style={{ marginBottom: '0.5rem' }} />
-                    <h3 style={{ margin: 0 }}>വോട്ടിംഗ്</h3>
                 </Link>
                 <Link to="/admin/voter-verification" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#f59e0b', color: 'white' }}>
                     <CheckCircle size={48} style={{ marginBottom: '0.5rem' }} />
                     <h3 style={{ margin: 0 }}>പരിശോധന</h3>
                 </Link>
-                <Link to="/admin/voter-status-reports" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#64748b', color: 'white' }}>
-                    <FileText size={48} style={{ marginBottom: '0.5rem' }} />
-                    <h3 style={{ margin: 0 }}>Status Reports</h3>
+                <Link to="/admin/mark-votes" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#10b981', color: 'white' }}>
+                    <CheckCircle size={48} style={{ marginBottom: '0.5rem' }} />
+                    <h3 style={{ margin: 0 }}>വോട്ടിംഗ്</h3>
                 </Link>
             </div>
 

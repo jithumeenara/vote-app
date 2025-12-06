@@ -26,6 +26,8 @@ export default function VoterStatusReports() {
     const isWardMember = user?.role === 'ward_member';
 
     const statusOptions = [
+        { value: 'all', label: 'All' },
+        { value: 'active', label: 'Active' },
         { value: 'shifted', label: 'Shifted' },
         { value: 'deleted', label: 'Deleted' },
         { value: 'death', label: 'Death' },
@@ -99,8 +101,11 @@ export default function VoterStatusReports() {
             let query = supabase
                 .from('voters')
                 .select('*, booths(booth_no, name)')
-                .eq('status', selectedStatus)
                 .order('sl_no');
+
+            if (selectedStatus !== 'all') {
+                query = query.eq('status', selectedStatus);
+            }
 
             if (selectedBooth) {
                 query = query.eq('booth_id', selectedBooth);
@@ -218,9 +223,12 @@ export default function VoterStatusReports() {
                         <h1 style={{ fontSize: '1.5rem', color: 'var(--primary-bg)', marginBottom: '0.5rem' }}>
                             {statusOptions.find(s => s.value === selectedStatus)?.label} Voters List
                         </h1>
-                        <p style={{ color: '#666' }}>
+                        <p style={{ color: '#666', marginBottom: '0.5rem' }}>
                             Ward: {wards.find(w => w.id === selectedWard)?.ward_no} |
                             Generated on: {new Date().toLocaleDateString()}
+                        </p>
+                        <p style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--primary)' }}>
+                            Total Voters: {voters.length}
                         </p>
                     </div>
 
@@ -230,10 +238,9 @@ export default function VoterStatusReports() {
                                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>SL No</th>
                                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Name</th>
+                                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Guardian Name</th>
                                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>House Name</th>
-                                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Age</th>
-                                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>ID Card No</th>
-                                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Booth</th>
+                                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Booth No</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -241,9 +248,8 @@ export default function VoterStatusReports() {
                                     <tr key={voter.id} style={{ borderBottom: '1px solid #eee' }}>
                                         <td style={{ padding: '0.75rem' }}>{voter.sl_no}</td>
                                         <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{voter.name}</td>
+                                        <td style={{ padding: '0.75rem' }}>{voter.guardian_name}</td>
                                         <td style={{ padding: '0.75rem' }}>{voter.house_name}</td>
-                                        <td style={{ padding: '0.75rem' }}>{voter.age}</td>
-                                        <td style={{ padding: '0.75rem' }}>{voter.id_card_no}</td>
                                         <td style={{ padding: '0.75rem' }}>{voter.booths?.booth_no}</td>
                                     </tr>
                                 ))}

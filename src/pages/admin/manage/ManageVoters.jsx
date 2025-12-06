@@ -33,6 +33,8 @@ export default function ManageVoters() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiSearchTerms, setAiSearchTerms] = useState([]);
 
+    const [filterStatus, setFilterStatus] = useState('');
+
     const isWardMember = user?.role === 'ward_member';
 
     useEffect(() => {
@@ -224,6 +226,9 @@ export default function ManageVoters() {
     }
 
     const filteredVoters = voters.filter(v => {
+        // Status Filter
+        if (filterStatus && v.status !== filterStatus) return false;
+
         const searchLower = searchTerm.toLowerCase();
         const matchesNormal = v.name.toLowerCase().includes(searchLower) ||
             v.sl_no.toString().includes(searchLower) ||
@@ -240,50 +245,72 @@ export default function ManageVoters() {
         <div className="container">
             <h2 style={{ marginBottom: '2rem', color: 'var(--primary-bg)' }}>വോട്ടർമാരെ നിയന്ത്രിക്കുക</h2>
 
-            <div className="grid grid-3" style={{ marginBottom: '2rem' }}>
-                <div className="form-group">
-                    <label className="label">പഞ്ചായത്ത്</label>
-                    <select
-                        className="input"
-                        value={selectedPanchayat}
-                        onChange={e => setSelectedPanchayat(e.target.value)}
-                        disabled={isWardMember}
-                    >
-                        <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
-                        {panchayats.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
+            <div style={{ marginBottom: '2rem' }}>
+                <div className="grid grid-2" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="label">പഞ്ചായത്ത്</label>
+                        <select
+                            className="input"
+                            value={selectedPanchayat}
+                            onChange={e => setSelectedPanchayat(e.target.value)}
+                            disabled={isWardMember}
+                        >
+                            <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
+                            {panchayats.map(p => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="label">വാർഡ്</label>
+                        <select
+                            className="input"
+                            value={selectedWard}
+                            onChange={e => setSelectedWard(e.target.value)}
+                            disabled={!selectedPanchayat || isWardMember}
+                        >
+                            <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
+                            {wards.map(w => (
+                                <option key={w.id} value={w.id}>{w.ward_no} - {w.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
-                <div className="form-group">
-                    <label className="label">വാർഡ്</label>
-                    <select
-                        className="input"
-                        value={selectedWard}
-                        onChange={e => setSelectedWard(e.target.value)}
-                        disabled={!selectedPanchayat || isWardMember}
-                    >
-                        <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
-                        {wards.map(w => (
-                            <option key={w.id} value={w.id}>{w.ward_no} - {w.name}</option>
-                        ))}
-                    </select>
-                </div>
+                <div className="grid grid-2">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="label">ബൂത്ത്</label>
+                        <select
+                            className="input"
+                            value={selectedBooth}
+                            onChange={e => setSelectedBooth(e.target.value)}
+                            disabled={!selectedWard}
+                        >
+                            <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
+                            {booths.map(b => (
+                                <option key={b.id} value={b.id}>{b.booth_no} - {b.name}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                <div className="form-group">
-                    <label className="label">ബൂത്ത്</label>
-                    <select
-                        className="input"
-                        value={selectedBooth}
-                        onChange={e => setSelectedBooth(e.target.value)}
-                        disabled={!selectedWard}
-                    >
-                        <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
-                        {booths.map(b => (
-                            <option key={b.id} value={b.id}>{b.booth_no} - {b.name}</option>
-                        ))}
-                    </select>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="label">അവസ്ഥ (Status)</label>
+                        <select
+                            className="input"
+                            value={filterStatus}
+                            onChange={e => setFilterStatus(e.target.value)}
+                        >
+                            <option value="">-- എല്ലാം (All) --</option>
+                            <option value="active">Active</option>
+                            <option value="shifted">Shifted</option>
+                            <option value="deleted">Deleted</option>
+                            <option value="death">Death</option>
+                            <option value="gulf">Gulf</option>
+                            <option value="out_of_place">Out of Place</option>
+                            <option value="duplicate">Duplicate</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
