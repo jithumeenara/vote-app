@@ -702,7 +702,7 @@ export default function GenerateSlips() {
                 )}
 
                 {activeTab === 'individual' && (
-                    <div className="card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+                    <div className="card" style={{ marginBottom: '2rem', padding: '1.5rem', overflow: 'visible' }}>
                         <div className="responsive-grid" style={{ marginBottom: '1.5rem' }}>
                             <div className="form-group">
                                 <label className="label">പഞ്ചായത്ത്</label>
