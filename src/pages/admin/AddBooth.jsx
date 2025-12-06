@@ -11,6 +11,7 @@ export default function AddBooth() {
     const [selectedWard, setSelectedWard] = useState('');
     const [boothNo, setBoothNo] = useState('');
     const [name, setName] = useState('');
+    const [contactNumber, setContactNumber] = useState('');
     const [loading, setLoading] = useState(false);
     const { addToast } = useToast();
     const { user } = useAuth();
@@ -63,7 +64,8 @@ export default function AddBooth() {
                 const { error } = await supabase.rpc('ward_add_booth', {
                     token: user.session_token,
                     booth_no_input: parseInt(boothNo),
-                    name_input: name
+                    name_input: name,
+                    contact_number_input: contactNumber
                 });
                 if (error) throw error;
             } else {
@@ -71,7 +73,8 @@ export default function AddBooth() {
                 const { error } = await supabase.from('booths').insert([{
                     ward_id: selectedWard,
                     booth_no: parseInt(boothNo),
-                    name
+                    name,
+                    contact_number: contactNumber
                 }]);
                 if (error) throw error;
             }
@@ -79,6 +82,7 @@ export default function AddBooth() {
             addToast('ബൂത്ത് വിജയകരമായി ചേർത്തു!', 'success');
             setBoothNo('');
             setName('');
+            setContactNumber('');
         } catch (error) {
             addToast('പിശക്: ' + error.message, 'error');
         } finally {
@@ -131,6 +135,17 @@ export default function AddBooth() {
                         onChange={e => setBoothNo(e.target.value)}
                         required
                         placeholder="ഉദാ: 1"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label className="label">സഹായത്തിനുള്ള നമ്പർ (Help Phone)</label>
+                    <input
+                        type="tel"
+                        className="input"
+                        value={contactNumber}
+                        onChange={e => setContactNumber(e.target.value)}
+                        placeholder="ഉദാ: 9876543210"
                     />
                 </div>
 

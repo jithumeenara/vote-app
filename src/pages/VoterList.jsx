@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Search, User } from 'lucide-react';
+import { Search, User, Phone } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { transliterateMalayalamToEnglish } from '../utils/transliteration';
 
@@ -68,12 +68,34 @@ export default function VoterList() {
     return (
         <div>
             <div style={{ marginBottom: '2rem' }}>
-                <span style={{ color: 'var(--text-light)', fontSize: '1rem' }}>
+                <span style={{ color: 'var(--text-light)', fontSize: '1rem', display: 'block', marginBottom: '0.5rem' }}>
                     {boothDetails?.wards?.panchayats?.name} / വാർഡ് {boothDetails?.wards?.ward_no}
                 </span>
-                <h1 style={{ color: 'var(--primary-bg)' }}>{boothDetails?.name}</h1>
-                <div style={{ fontSize: '1rem', color: 'var(--text-light)', marginTop: '0.5rem', fontWeight: '600' }}>
-                    ആകെ വോട്ടർമാർ: {voters.length}
+                <h1 style={{ color: 'var(--primary-bg)', marginBottom: '0.5rem' }}>{boothDetails?.name}</h1>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ fontSize: '1rem', color: 'var(--text-light)', fontWeight: '600' }}>
+                        ആകെ വോട്ടർമാർ: {voters.length}
+                    </div>
+
+                    {boothDetails?.contact_number && (
+                        <a
+                            href={`tel:${boothDetails.contact_number}`}
+                            className="btn btn-primary"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                textDecoration: 'none',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '50px',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                            }}
+                        >
+                            <Phone size={18} />
+                            <span>സഹായത്തിന് വിളിക്കുക (Call for Help)</span>
+                        </a>
+                    )}
                 </div>
             </div>
 

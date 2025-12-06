@@ -16,6 +16,7 @@ export default function ManageBooths() {
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
     const [editBoothNo, setEditBoothNo] = useState('');
+    const [editContactNumber, setEditContactNumber] = useState('');
 
     const [deleteId, setDeleteId] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -97,18 +98,20 @@ export default function ManageBooths() {
         setEditingId(booth.id);
         setEditName(booth.name);
         setEditBoothNo(booth.booth_no);
+        setEditContactNumber(booth.contact_number || '');
     }
 
     async function saveEdit(id) {
         const { error } = await supabase.from('booths').update({
             name: editName,
-            booth_no: parseInt(editBoothNo)
+            booth_no: parseInt(editBoothNo),
+            contact_number: editContactNumber
         }).eq('id', id);
 
         if (error) {
             alert('പിശക്: ' + error.message);
         } else {
-            setBooths(booths.map(b => b.id === id ? { ...b, name: editName, booth_no: parseInt(editBoothNo) } : b));
+            setBooths(booths.map(b => b.id === id ? { ...b, name: editName, booth_no: parseInt(editBoothNo), contact_number: editContactNumber } : b));
             setEditingId(null);
         }
     }
@@ -154,34 +157,51 @@ export default function ManageBooths() {
                     {booths.map((booth) => (
                         <div key={booth.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             {editingId === booth.id ? (
-                                <div style={{ display: 'flex', gap: '1rem', flex: 1, flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                        <input
+                                            className="input"
+                                            type="number"
+                                            style={{ width: '80px' }}
+                                            value={editBoothNo}
+                                            onChange={e => setEditBoothNo(e.target.value)}
+                                            placeholder="No."
+                                        />
+                                        <input
+                                            className="input"
+                                            style={{ flex: 1 }}
+                                            value={editName}
+                                            onChange={e => setEditName(e.target.value)}
+                                            placeholder="Name"
+                                        />
+                                    </div>
                                     <input
                                         className="input"
-                                        type="number"
-                                        style={{ width: '80px' }}
-                                        value={editBoothNo}
-                                        onChange={e => setEditBoothNo(e.target.value)}
+                                        value={editContactNumber}
+                                        onChange={e => setEditContactNumber(e.target.value)}
+                                        placeholder="Phone Number"
                                     />
-                                    <input
-                                        className="input"
-                                        style={{ flex: 1 }}
-                                        value={editName}
-                                        onChange={e => setEditName(e.target.value)}
-                                    />
-                                    <button onClick={() => saveEdit(booth.id)} className="btn btn-primary" style={{ padding: '0.5rem' }}>
-                                        <Save size={20} />
-                                    </button>
-                                    <button onClick={() => setEditingId(null)} className="btn btn-secondary" style={{ padding: '0.5rem' }}>
-                                        <X size={20} />
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button onClick={() => saveEdit(booth.id)} className="btn btn-primary" style={{ padding: '0.5rem' }}>
+                                            <Save size={20} /> Save
+                                        </button>
+                                        <button onClick={() => setEditingId(null)} className="btn btn-secondary" style={{ padding: '0.5rem' }}>
+                                            <X size={20} /> Cancel
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <>
-                                    <div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                         <div style={{ fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 'bold' }}>
                                             ബൂത്ത് നമ്പർ: {booth.booth_no}
                                         </div>
                                         <div style={{ fontWeight: '700', fontSize: '1.2rem' }}>{booth.name}</div>
+                                        {booth.contact_number && (
+                                            <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                📞 {booth.contact_number}
+                                            </div>
+                                        )}
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                         <button onClick={() => startEdit(booth)} className="btn btn-secondary" style={{ padding: '0.5rem' }}>
